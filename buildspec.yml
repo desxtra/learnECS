@@ -1,28 +1,25 @@
 version: 0.2
 
-env:
-  variables:
-    AWS_ACCOUNT_ID: "834549009763"
-    AWS_REGION: "us-east-1"
-    IMAGE_REPO_NAME: "learningecs"
-    ECR_REGISTRY: "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME"
-
 phases:
   pre_build:
     commands:
-      - echo "Logging in to Amazon ECR..."
-      - aws --version
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+      - echo Retrieving DOCKER_USERNAME and DOCKER_PASSWORD from Parameter Store...
+      - export DOCKER_USERNAME=$(aws ssm get-parameter --name "/course-catalog/production/DOCKER_USERNAME" --query "Parameter.Value" --output text)
+      - export DOCKER_PASSWORD=$(aws ssm get-parameter --name "/course-catalog/production/DOCKER_PASSWORD" --with-decryption --query "Parameter.Value" --output text)
       
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 834549009763.dkr.ecr.us-east-1.amazonaws.com
+
   build:
     commands:
-      - echo "Build started on $(date)"
-      - echo "Building the Docker image..."
-      - docker build -t $IMAGE_REPO_NAME .
-      - docker tag $IMAGE_REPO_NAME:latest $ECR_REGISTRY:latest
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t learningecs .
+      - docker tag learningecs:latest 834549009763.dkr.ecr.us-east-1.amazonaws.com/learningecs:latest
 
   post_build:
     commands:
-      - echo "Build completed on $(date)"
-      - echo "Pushing the Docker image..."
-      - docker push $ECR_REGISTRY:latest
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push 834549009763.dkr.ecr.us-east-1.amazonaws.com/learningecs:latest
