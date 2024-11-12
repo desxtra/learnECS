@@ -5,24 +5,24 @@ env:
     AWS_ACCOUNT_ID: "834549009763"
     AWS_REGION: "us-east-1"
     IMAGE_REPO_NAME: "learningecs"
-    ECR_REGISTRY: "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME"
+    ECR_REGISTRY: "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
 
 phases:
   pre_build:
     commands:
       - echo "Logging in to Amazon ECR..."
       - aws --version
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+      - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
       
   build:
     commands:
       - echo "Build started on $(date)"
       - echo "Building the Docker image..."
-      - docker build -t $IMAGE_REPO_NAME .
-      - docker tag $IMAGE_REPO_NAME:latest $ECR_REGISTRY:latest
+      - docker build -t ${IMAGE_REPO_NAME} .
+      - docker tag ${IMAGE_REPO_NAME}:latest ${ECR_REGISTRY}:latest
 
   post_build:
     commands:
       - echo "Build completed on $(date)"
       - echo "Pushing the Docker image..."
-      - docker push $ECR_REGISTRY:latest
+      - docker push ${ECR_REGISTRY}:latest
